@@ -1,0 +1,7 @@
+// theme toggle
+const toggleBtn = document.querySelector("button");
+toggleBtn.addEventListener("click", toggle);
+
+function toggle() {
+  document.body.classList.toggle("light");
+}

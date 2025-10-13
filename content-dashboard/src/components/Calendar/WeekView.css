@@ -1,0 +1,134 @@
+.week-view {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-s);
+  border-left: 4px solid var(--bg-light);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  flex-shrink: 0;
+  will-change: transform;
+  transform: translateZ(0);
+  contain: layout style;
+}
+
+.week-view.content-theme {
+  border-left-color: var(--primary);
+}
+
+.week-view.cta-content {
+  border-left-color: var(--success);
+}
+
+.week-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--bg-light);
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.week-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.week-info h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.sprint-badge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sprint-badge.content-theme {
+  background: var(--primary);
+  color: var(--bg-dark);
+}
+
+.sprint-badge.cta-content {
+  background: var(--success);
+  color: var(--bg-dark);
+}
+
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--spacing-sm);
+}
+
+@media (max-width: 1200px) {
+  .week-days {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .week-days {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .week-days {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cta-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.cta-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text);
+  user-select: none;
+}
+
+.cta-toggle input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.landing-page-input {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--bg-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.875rem;
+  min-width: 200px;
+  transition: var(--transition);
+}
+
+.landing-page-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.landing-page-input::placeholder {
+  color: var(--text-muted);
+}

@@ -1,0 +1,35 @@
+<header><h1>Depth</h1>  <button>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="power-icon"
+        >
+          <path d="M12 2v10" />
+          <path d="M18.4 6.6a9 9 0 1 1-12.77.04" />
+        </svg>
+</button> </header>
+    <section class="shadows">
+      <div class="shadow-none">
+        <h2>Level 0</h2>
+        <p>No shadow</p>
+      </div>
+      <div class="shadow-s">
+        <h2>Level 1</h2>
+        <p>Small shadow</p>
+      </div>
+      <div class="shadow-m">
+        <h2>Level 2</h2>
+        <p>Medium shadow</p>
+      </div>
+      <div class="shadow-l">
+        <h2>Level 3</h2>
+        <p>Large shadow</p>
+      </div>
+    </section>

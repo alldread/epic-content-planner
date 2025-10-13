@@ -1,0 +1,282 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Manrope", sans-serif;
+}
+
+:root {
+  --ff: "Manrope", sans-serif;
+  --h1: 700 1.5rem/1.2em var(--ff);
+  --h2: 700 1.25rem/1.4em var(--ff);
+  --h3: 700 1.125rem/1.4em var(--ff);
+  --p: 400 1rem/1.6em var(--ff);
+  --small: 400 0.875rem/1.6em var(--ff);
+  --tiny: 400 0.75rem/1.4em var(--ff);
+  --transition: 0.2s ease-in-out;
+
+  /* Colors */
+  --primary: oklch(0.9 0.17 100);
+  --success: oklch(0.75 0.15 150);
+  --warning: oklch(0.85 0.15 60);
+  --danger: oklch(0.65 0.2 15);
+
+  /* Dark theme (default) */
+  --bg-dark: oklch(0.1 0 264);
+  --bg: oklch(0.2 0 264);
+  --bg-light: oklch(0.3 0 264);
+  --surface: oklch(0.25 0 264);
+
+  /* Text colors */
+  --text: oklch(0.96 0 264);
+  --text-muted: oklch(0.76 0 264);
+  --text-dim: oklch(0.56 0 264);
+
+  /* Shadows */
+  --shadow-s: inset 0 1px 2px #ffffff30, 0 1px 2px #00000030, 0 2px 4px #00000015;
+  --shadow-m: inset 0 1px 2px #ffffff50, 0 2px 4px #00000030, 0 4px 8px #00000015;
+  --shadow-l: inset 0 1px 2px #ffffff70, 0 4px 6px #00000030, 0 6px 10px #00000015;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+
+  /* Border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* Layout dimensions */
+  --header-height: 70px;
+}
+
+body.light {
+  /* Light theme */
+  --primary: oklch(0.65 0.15 264);
+  --success: oklch(0.5 0.2 150);
+  --warning: oklch(0.65 0.25 60);
+  --danger: oklch(0.5 0.25 15);
+
+  --bg-dark: oklch(0.92 0 264);
+  --bg: oklch(0.96 0 264);
+  --bg-light: oklch(1 0 264);
+  --surface: oklch(0.98 0 264);
+
+  --text: oklch(0.15 0 264);
+  --text-muted: oklch(0.4 0 264);
+  --text-dim: oklch(0.6 0 264);
+}
+
+/* Global styles */
+body {
+  background: var(--bg-dark);
+  color: var(--text-muted);
+  font: var(--p);
+  min-height: 100vh;
+  transition: background var(--transition), color var(--transition);
+}
+
+h1 {
+  font: var(--h1);
+  color: var(--text);
+}
+
+h2 {
+  font: var(--h2);
+  color: var(--text);
+}
+
+h3 {
+  font: var(--h3);
+  color: var(--text);
+}
+
+p {
+  font: var(--p);
+  color: var(--text-muted);
+}
+
+small, .small {
+  font: var(--small);
+}
+
+.tiny {
+  font: var(--tiny);
+}
+
+/* Shadow utilities */
+.shadow-s {
+  box-shadow: var(--shadow-s);
+}
+
+.shadow-m {
+  box-shadow: var(--shadow-m);
+}
+
+.shadow-l {
+  box-shadow: var(--shadow-l);
+}
+
+/* Card styles */
+.card {
+  background: var(--bg);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  transition: var(--transition);
+}
+
+.card-elevated {
+  background: var(--surface);
+  box-shadow: var(--shadow-m);
+}
+
+/* Button base styles */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font: var(--p);
+  background: var(--bg-light);
+  color: var(--text);
+  transition: var(--transition);
+  box-shadow: var(--shadow-s);
+}
+
+button:hover {
+  box-shadow: var(--shadow-m);
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-s);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+button.primary {
+  background: var(--primary);
+  color: var(--bg-dark);
+  font-weight: 600;
+}
+
+button.success {
+  background: var(--success);
+  color: var(--bg-dark);
+}
+
+button.danger {
+  background: var(--danger);
+  color: var(--text);
+}
+
+/* Input styles */
+input, textarea, select {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--bg-light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font: var(--p);
+  transition: var(--transition);
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px oklch(0.9 0.17 100 / 0.1);
+}
+
+/* Checkbox styles */
+input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+/* Link styles */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+/* Utility classes */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.grid {
+  display: grid;
+}
+
+.gap-xs { gap: var(--spacing-xs); }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+.gap-xl { gap: var(--spacing-xl); }
+
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+
+.text-center { text-align: center; }
+.text-muted { color: var(--text-muted); }
+.text-dim { color: var(--text-dim); }
+
+/* Status indicators - These are only for small status dots, NOT for cards */
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+  border-radius: var(--radius-md);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-light);
+  border-radius: var(--radius-md);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
