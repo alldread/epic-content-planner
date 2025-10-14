@@ -21,6 +21,7 @@ const PasswordProtect = ({ children }) => {
     setError('');
 
     const correctPassword = import.meta.env.VITE_APP_PASSWORD || 'Epic2025!';
+    console.log('Password from env:', import.meta.env.VITE_APP_PASSWORD ? 'Loaded' : 'Using fallback');
 
     if (password === correctPassword) {
       sessionStorage.setItem('epic-auth', 'authenticated');

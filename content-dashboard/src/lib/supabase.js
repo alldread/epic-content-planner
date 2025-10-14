@@ -3,6 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Detailed debugging
+console.log('Environment mode:', import.meta.env.MODE);
+console.log('Is Production:', import.meta.env.PROD);
+console.log('Is Development:', import.meta.env.DEV);
+console.log('All env vars:', Object.keys(import.meta.env));
 console.log('Supabase URL:', supabaseUrl ? 'Loaded' : 'Missing');
 console.log('Supabase Anon Key:', supabaseAnonKey ? 'Loaded' : 'Missing');
 
