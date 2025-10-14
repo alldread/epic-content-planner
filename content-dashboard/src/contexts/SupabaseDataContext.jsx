@@ -36,159 +36,155 @@ export const DataProvider = ({ children }) => {
 
   // Load initial data from Supabase
   useEffect(() => {
-    const fetchData = async () => {
+    const loadAllData = async () => {
+      setLoading(true);
+      console.log('Starting to load data from Supabase...');
+
+      // Check if Supabase client is available
+      if (!supabase) {
+        console.error('Supabase client not initialized - check environment variables');
+        console.log('Using empty data state - no database connection');
+        setLoading(false);
+        return;
+      }
+
       try {
-        await loadAllData();
+        // Load all data in parallel
+        const [
+          postsResult,
+          storiesResult,
+          newslettersResult,
+          tasksResult,
+          episodesResult,
+          clipsResult,
+          sprintConfigResult,
+          sprintFocusesResult
+        ] = await Promise.all([
+          supabase.from('posts').select('*'),
+          supabase.from('stories').select('*'),
+          supabase.from('newsletters').select('*'),
+          supabase.from('tasks').select('*').order('created_at', { ascending: false }),
+          supabase.from('podcast_episodes').select('*').order('created_at', { ascending: false }),
+          supabase.from('podcast_clips').select('*').order('created_at', { ascending: false }),
+          supabase.from('sprint_config').select('*'),
+          supabase.from('sprint_focuses').select('*').eq('active', true)
+        ]);
+
+        // Check for errors in any query
+        const errors = [];
+        if (postsResult.error) errors.push('posts: ' + postsResult.error.message);
+        if (storiesResult.error) errors.push('stories: ' + storiesResult.error.message);
+        if (newslettersResult.error) errors.push('newsletters: ' + newslettersResult.error.message);
+        if (tasksResult.error) errors.push('tasks: ' + tasksResult.error.message);
+        if (episodesResult.error) errors.push('episodes: ' + episodesResult.error.message);
+        if (clipsResult.error) errors.push('clips: ' + clipsResult.error.message);
+        if (sprintConfigResult.error) errors.push('sprint_config: ' + sprintConfigResult.error.message);
+        if (sprintFocusesResult.error) errors.push('sprint_focuses: ' + sprintFocusesResult.error.message);
+
+        if (errors.length > 0) {
+          console.error('Errors loading from Supabase:', errors);
+        }
+
+        // Transform posts data
+        const postsData = {};
+        if (postsResult.data) {
+          postsResult.data.forEach(post => {
+            const dateKey = formatDate(post.date);
+            if (!postsData[dateKey]) postsData[dateKey] = {};
+            postsData[dateKey][post.platform] = {
+              done: post.done,
+              link: post.link || '',
+              caption: post.caption || ''
+            };
+          });
+        }
+
+        // Transform stories data
+        if (storiesResult.data) {
+          storiesResult.data.forEach(story => {
+            const dateKey = formatDate(story.date);
+            if (!postsData[dateKey]) postsData[dateKey] = {};
+            postsData[dateKey].stories = {
+              done: story.done,
+              notes: story.notes || ''
+            };
+          });
+        }
+
+        // Transform newsletters data
+        const newslettersData = {
+          'crazy-experiments': [],
+          'rolands-riff': []
+        };
+        if (newslettersResult.data) {
+          newslettersResult.data.forEach(newsletter => {
+            newslettersData[newsletter.type].push({
+              date: formatDate(newsletter.date),
+              status: newsletter.status,
+              link: newsletter.link || ''
+            });
+          });
+        }
+
+        // Transform sprint config data
+        const sprintSchedule = {};
+        const weekLandingPages = {};
+        const weekOfferPages = {};
+        const ctaWeeks = {};
+        if (sprintConfigResult.data) {
+          sprintConfigResult.data.forEach(config => {
+            if (config.focus_id) sprintSchedule[config.week_id] = config.focus_id;
+            if (config.landing_page) weekLandingPages[config.week_id] = config.landing_page;
+            if (config.offer_page) weekOfferPages[config.week_id] = config.offer_page;
+            if (config.is_cta_week) ctaWeeks[config.week_id] = true;
+          });
+        }
+
+        // Use custom sprint focuses if available, otherwise use defaults
+        const sprintFocuses = sprintFocusesResult.data && sprintFocusesResult.data.length > 0
+          ? sprintFocusesResult.data
+          : DEFAULT_SPRINT_FOCUSES;
+
+        console.log('Data loaded successfully:', {
+          posts: Object.keys(postsData).length,
+          newsletters: newslettersResult.data?.length || 0,
+          tasks: tasksResult.data?.length || 0,
+          episodes: episodesResult.data?.length || 0,
+          clips: clipsResult.data?.length || 0,
+          sprintConfigs: Object.keys(sprintSchedule).length,
+          sprintFocuses: sprintFocuses.length
+        });
+
+        setData({
+          posts: postsData,
+          newsletters: newslettersData,
+          tasks: tasksResult.data || [],
+          podcast: {
+            episodes: episodesResult.data || [],
+            clips: clipsResult.data || []
+          },
+          sprintFocuses,
+          sprintSchedule,
+          weekLandingPages,
+          weekOfferPages,
+          ctaWeeks
+        });
+        console.log('Data state updated, loading complete');
       } catch (error) {
-        console.error('Failed to load initial data:', error);
-        setLoading(false); // Ensure loading stops even on error
+        console.error('Error loading data from Supabase:', error);
+        console.error('Error details:', error.message, error.stack);
+      } finally {
+        setLoading(false);
+        console.log('Loading state set to false');
       }
     };
-    fetchData();
+
+    // Call the function
+    loadAllData().catch(error => {
+      console.error('Fatal error loading data:', error);
+      setLoading(false);
+    });
   }, []);
-
-  const loadAllData = async () => {
-    setLoading(true);
-    console.log('Starting to load data from Supabase...');
-
-    // Check if Supabase client is available
-    if (!supabase) {
-      console.error('Supabase client not initialized - check environment variables');
-      console.log('Using empty data state - no database connection');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Load all data in parallel
-      const [
-        postsResult,
-        storiesResult,
-        newslettersResult,
-        tasksResult,
-        episodesResult,
-        clipsResult,
-        sprintConfigResult,
-        sprintFocusesResult
-      ] = await Promise.all([
-        supabase.from('posts').select('*'),
-        supabase.from('stories').select('*'),
-        supabase.from('newsletters').select('*'),
-        supabase.from('tasks').select('*').order('created_at', { ascending: false }),
-        supabase.from('podcast_episodes').select('*').order('created_at', { ascending: false }),
-        supabase.from('podcast_clips').select('*').order('created_at', { ascending: false }),
-        supabase.from('sprint_config').select('*'),
-        supabase.from('sprint_focuses').select('*').eq('active', true)
-      ]);
-
-      // Check for errors in any query
-      const errors = [];
-      if (postsResult.error) errors.push('posts: ' + postsResult.error.message);
-      if (storiesResult.error) errors.push('stories: ' + storiesResult.error.message);
-      if (newslettersResult.error) errors.push('newsletters: ' + newslettersResult.error.message);
-      if (tasksResult.error) errors.push('tasks: ' + tasksResult.error.message);
-      if (episodesResult.error) errors.push('episodes: ' + episodesResult.error.message);
-      if (clipsResult.error) errors.push('clips: ' + clipsResult.error.message);
-      if (sprintConfigResult.error) errors.push('sprint_config: ' + sprintConfigResult.error.message);
-      if (sprintFocusesResult.error) errors.push('sprint_focuses: ' + sprintFocusesResult.error.message);
-
-      if (errors.length > 0) {
-        console.error('Errors loading from Supabase:', errors);
-      }
-
-      // Transform posts data
-      const postsData = {};
-      if (postsResult.data) {
-        postsResult.data.forEach(post => {
-          const dateKey = formatDate(post.date);
-          if (!postsData[dateKey]) postsData[dateKey] = {};
-          postsData[dateKey][post.platform] = {
-            done: post.done,
-            link: post.link || '',
-            caption: post.caption || ''
-          };
-        });
-      }
-
-      // Transform stories data
-      if (storiesResult.data) {
-        storiesResult.data.forEach(story => {
-          const dateKey = formatDate(story.date);
-          if (!postsData[dateKey]) postsData[dateKey] = {};
-          postsData[dateKey].stories = {
-            done: story.done,
-            notes: story.notes || ''
-          };
-        });
-      }
-
-      // Transform newsletters data
-      const newslettersData = {
-        'crazy-experiments': [],
-        'rolands-riff': []
-      };
-      if (newslettersResult.data) {
-        newslettersResult.data.forEach(newsletter => {
-          newslettersData[newsletter.type].push({
-            date: formatDate(newsletter.date),
-            status: newsletter.status,
-            link: newsletter.link || ''
-          });
-        });
-      }
-
-      // Transform sprint config data
-      const sprintSchedule = {};
-      const weekLandingPages = {};
-      const weekOfferPages = {};
-      const ctaWeeks = {};
-      if (sprintConfigResult.data) {
-        sprintConfigResult.data.forEach(config => {
-          if (config.focus_id) sprintSchedule[config.week_id] = config.focus_id;
-          if (config.landing_page) weekLandingPages[config.week_id] = config.landing_page;
-          if (config.offer_page) weekOfferPages[config.week_id] = config.offer_page;
-          if (config.is_cta_week) ctaWeeks[config.week_id] = true;
-        });
-      }
-
-      // Use custom sprint focuses if available, otherwise use defaults
-      const sprintFocuses = sprintFocusesResult.data && sprintFocusesResult.data.length > 0
-        ? sprintFocusesResult.data
-        : DEFAULT_SPRINT_FOCUSES;
-
-      console.log('Data loaded successfully:', {
-        posts: Object.keys(postsData).length,
-        newsletters: newslettersResult.data?.length || 0,
-        tasks: tasksResult.data?.length || 0,
-        episodes: episodesResult.data?.length || 0,
-        clips: clipsResult.data?.length || 0,
-        sprintConfigs: Object.keys(sprintSchedule).length,
-        sprintFocuses: sprintFocuses.length
-      });
-
-      setData({
-        posts: postsData,
-        newsletters: newslettersData,
-        tasks: tasksResult.data || [],
-        podcast: {
-          episodes: episodesResult.data || [],
-          clips: clipsResult.data || []
-        },
-        sprintFocuses,
-        sprintSchedule,
-        weekLandingPages,
-        weekOfferPages,
-        ctaWeeks
-      });
-      console.log('Data state updated, loading complete');
-    } catch (error) {
-      console.error('Error loading data from Supabase:', error);
-      console.error('Error details:', error.message, error.stack);
-    } finally {
-      setLoading(false);
-      console.log('Loading state set to false');
-    }
-  };
 
   // Social Posts Management
   const updatePost = useCallback(async (date, platform, updates) => {

@@ -3,14 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Detailed debugging
-console.log('Environment mode:', import.meta.env.MODE);
-console.log('Is Production:', import.meta.env.PROD);
-console.log('Is Development:', import.meta.env.DEV);
-console.log('All env vars:', Object.keys(import.meta.env));
-console.log('Supabase URL:', supabaseUrl ? 'Loaded' : 'Missing');
-console.log('Supabase Anon Key:', supabaseAnonKey ? 'Loaded' : 'Missing');
-
 // Only create Supabase client if we have valid environment variables
 let supabase = null;
 
@@ -28,12 +20,8 @@ if (supabaseUrl && supabaseAnonKey) {
       }
     }
   );
-  console.log('Supabase client created successfully');
 } else {
-  console.error('CRITICAL: Supabase environment variables not found');
-  console.error('URL:', supabaseUrl || 'MISSING - Check VITE_SUPABASE_URL');
-  console.error('Key:', supabaseAnonKey ? 'Present' : 'MISSING - Check VITE_SUPABASE_ANON_KEY');
-  console.error('The app will not be able to save or load data');
+  console.error('Supabase environment variables not configured');
 }
 
 export { supabase };
