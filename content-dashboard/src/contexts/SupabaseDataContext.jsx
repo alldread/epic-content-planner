@@ -719,6 +719,7 @@ export const DataProvider = ({ children }) => {
   }, [data.sprintSchedule]);
 
   const setWeekLandingPage = useCallback(async (weekId, url) => {
+    console.log('Saving landing page:', { weekId, url });
     try {
       // Check if config exists
       const { data: existing } = await supabase
@@ -736,7 +737,9 @@ export const DataProvider = ({ children }) => {
             landing_page: url,
             updated_at: new Date().toISOString()
           })
-          .eq('id', existing.id);
+          .eq('id', existing.id)
+          .select()
+          .single();
       } else {
         // Insert new config
         result = await supabase
@@ -744,12 +747,18 @@ export const DataProvider = ({ children }) => {
           .insert({
             week_id: weekId,
             landing_page: url
-          });
+          })
+          .select()
+          .single();
       }
 
-      if (result.error) {
+      console.log('Supabase save result:', result);
+
+      if (result && result.error) {
+        console.error('Failed to save landing page:', result.error);
         handleSupabaseError(result.error);
       } else {
+        console.log('Landing page saved successfully to Supabase');
         setData(prev => ({
           ...prev,
           weekLandingPages: {
