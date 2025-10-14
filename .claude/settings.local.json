@@ -4,7 +4,14 @@
       "Bash(npm create vite@latest:*)",
       "Bash(npm install)",
       "Bash(npm install:*)",
-      "Bash(npm run dev)"
+      "Bash(npm run dev)",
+      "Read(//Users/ryanfrasier/**)",
+      "Bash(tree:*)",
+      "Bash(npx @supabase/mcp-server-supabase@latest:*)",
+      "Bash(npx:*)",
+      "Bash(cd:*)",
+      "Bash(node:*)",
+      "Bash(curl -X POST 'https://nqbetmhexfyvmrhorpgt.supabase.co/rest/v1/rpc/exec_sql' )"
     ],
     "deny": [],
     "ask": []
@@ -15,7 +22,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -c (New-Object Media.SoundPlayer 'C:\\Users\\ryana\\Downloads\\grunt.wav').PlaySync()"
+            "command": "bash .claude/play-sound.sh"
           }
         ]
       }
