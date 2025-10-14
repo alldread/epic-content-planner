@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DataProvider } from './contexts/SupabaseDataContext';
+import { DataProvider } from './contexts/DataContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import PasswordProtect from './components/Auth/PasswordProtect';
 import Layout from './components/Layout/Layout';

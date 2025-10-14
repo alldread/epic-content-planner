@@ -36,11 +36,15 @@ export const DataProvider = ({ children }) => {
 
   // Load initial data from Supabase
   useEffect(() => {
-    loadAllData();
+    const fetchData = async () => {
+      await loadAllData();
+    };
+    fetchData();
   }, []);
 
   const loadAllData = async () => {
     setLoading(true);
+    console.log('Starting to load data from Supabase...');
     try {
       // Load all data in parallel
       const [
@@ -62,6 +66,21 @@ export const DataProvider = ({ children }) => {
         supabase.from('sprint_config').select('*'),
         supabase.from('sprint_focuses').select('*').eq('active', true)
       ]);
+
+      // Check for errors in any query
+      const errors = [];
+      if (postsResult.error) errors.push('posts: ' + postsResult.error.message);
+      if (storiesResult.error) errors.push('stories: ' + storiesResult.error.message);
+      if (newslettersResult.error) errors.push('newsletters: ' + newslettersResult.error.message);
+      if (tasksResult.error) errors.push('tasks: ' + tasksResult.error.message);
+      if (episodesResult.error) errors.push('episodes: ' + episodesResult.error.message);
+      if (clipsResult.error) errors.push('clips: ' + clipsResult.error.message);
+      if (sprintConfigResult.error) errors.push('sprint_config: ' + sprintConfigResult.error.message);
+      if (sprintFocusesResult.error) errors.push('sprint_focuses: ' + sprintFocusesResult.error.message);
+
+      if (errors.length > 0) {
+        console.error('Errors loading from Supabase:', errors);
+      }
 
       // Transform posts data
       const postsData = {};
@@ -123,6 +142,16 @@ export const DataProvider = ({ children }) => {
         ? sprintFocusesResult.data
         : DEFAULT_SPRINT_FOCUSES;
 
+      console.log('Data loaded successfully:', {
+        posts: Object.keys(postsData).length,
+        newsletters: newslettersResult.data?.length || 0,
+        tasks: tasksResult.data?.length || 0,
+        episodes: episodesResult.data?.length || 0,
+        clips: clipsResult.data?.length || 0,
+        sprintConfigs: Object.keys(sprintSchedule).length,
+        sprintFocuses: sprintFocuses.length
+      });
+
       setData({
         posts: postsData,
         newsletters: newslettersData,
@@ -137,10 +166,13 @@ export const DataProvider = ({ children }) => {
         weekOfferPages,
         ctaWeeks
       });
+      console.log('Data state updated, loading complete');
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading data from Supabase:', error);
+      console.error('Error details:', error.message, error.stack);
     } finally {
       setLoading(false);
+      console.log('Loading state set to false');
     }
   };
 

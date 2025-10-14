@@ -13,7 +13,10 @@
       "Bash(node:*)",
       "Bash(curl -X POST 'https://nqbetmhexfyvmrhorpgt.supabase.co/rest/v1/rpc/exec_sql' )",
       "Bash(git commit:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(cat:*)",
+      "Bash(open:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
