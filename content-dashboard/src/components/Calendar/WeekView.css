@@ -4,8 +4,6 @@
   padding: var(--spacing-md);
   box-shadow: var(--shadow-s);
   border-left: 4px solid var(--bg-light);
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
   flex-shrink: 0;
   will-change: transform;
   transform: translateZ(0);

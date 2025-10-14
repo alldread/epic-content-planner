@@ -5,6 +5,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 Epic Content Planner is a comprehensive content management dashboard for tracking social media posts, newsletters, podcasts, and tasks across multiple platforms. Built for Roland Frasier's Epic content strategy using a sprint-based approach.
 
+## Development Rules
+
+### CRITICAL: Only implement what is explicitly requested
+- Make ONLY the changes asked for - nothing else
+- Do NOT remove, modify, or "improve" existing features unless specifically requested
+- Do NOT make assumptions about what would be "better"
+- If something seems unclear, ask for clarification instead of guessing
+
+When fixing bugs: Fix only the reported issue. Leave everything else exactly as it is.
+
+### Technical Approach
+- When searching for solutions, include "2025" in search queries for current information
+- Prefer time-tested, well-documented solutions that are proven in production
+- It's okay to use newer features if they're stable and well-supported
+- Priority is always: it works reliably > it's cutting edge
+
 ## Tech Stack
 - **Framework**: React 19.1.1 with Vite 7.1.7
 - **Language**: JavaScript ES2020+ (not TypeScript)

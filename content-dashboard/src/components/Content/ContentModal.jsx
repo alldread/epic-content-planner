@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from '../UI/Modal';
 import SocialPostForm from './SocialPostForm';
@@ -9,17 +9,41 @@ import { InstagramIcon } from '../UI/SocialIcons';
 import './ContentModal.css';
 
 const ContentModal = ({ date, onClose }) => {
-  const [activeTab, setActiveTab] = useState('roland-instagram');
   const { updateNewsletter, getNewsletter } = useData();
 
-  const tabs = [
-    { id: 'roland-instagram', label: 'Roland Frasier', icon: <InstagramIcon size={16} /> },
-    { id: 'bl-instagram', label: 'Business Lunch', icon: <InstagramIcon size={16} /> },
-    { id: 'other-social', label: 'Other Social' },
-    { id: 'newsletters', label: 'Newsletters' },
-    { id: 'podcast', label: 'Podcast' },
-    { id: 'tasks', label: 'Tasks' }
-  ];
+  // Dynamically determine which tabs should be shown based on the day
+  const getTabsForDate = (date) => {
+    const allTabs = [
+      { id: 'roland-instagram', label: 'Roland Frasier', icon: <InstagramIcon size={16} />, always: true },
+      { id: 'bl-instagram', label: 'Business Lunch', icon: <InstagramIcon size={16} />, days: ['tuesday', 'thursday'] },
+      { id: 'other-social', label: 'Other Social', always: true },
+      { id: 'newsletters', label: 'Newsletters', days: ['friday'] },
+      { id: 'podcast', label: 'Podcast', days: ['tuesday', 'thursday'] },
+      { id: 'tasks', label: 'Tasks', always: true }
+    ];
+
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+
+    return allTabs.filter(tab => {
+      if (tab.always) return true;
+      if (tab.days) return tab.days.includes(dayOfWeek);
+      return false;
+    });
+  };
+
+  const tabs = useMemo(() => getTabsForDate(date), [date]);
+
+  // Set initial active tab to the first available tab
+  const [activeTab, setActiveTab] = useState(tabs[0]?.id || 'tasks');
+
+  // Reset active tab when tabs change (e.g., when switching days)
+  useEffect(() => {
+    // If current active tab is not in the new tabs list, switch to first tab
+    const tabIds = tabs.map(t => t.id);
+    if (!tabIds.includes(activeTab)) {
+      setActiveTab(tabs[0]?.id || 'tasks');
+    }
+  }, [tabs]); // Only depend on tabs, not activeTab to avoid loops
 
   // Check for newsletters on this day
   const newsletters = [];

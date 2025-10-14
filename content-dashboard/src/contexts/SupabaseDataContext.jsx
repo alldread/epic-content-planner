@@ -1,0 +1,874 @@
+import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
+import { supabase, handleSupabaseError } from '../lib/supabase';
+import { formatDate, isTuesday, isThursday } from '../utils/dateHelpers';
+import { DEFAULT_SPRINT_FOCUSES } from '../utils/sprintFocuses';
+import LoadingSpinner from '../components/UI/LoadingSpinner';
+
+const DataContext = createContext();
+
+export const useData = () => {
+  const context = useContext(DataContext);
+  if (!context) {
+    throw new Error('useData must be used within a DataProvider');
+  }
+  return context;
+};
+
+export const DataProvider = ({ children }) => {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState({
+    posts: {},
+    newsletters: {
+      'crazy-experiments': [],
+      'rolands-riff': []
+    },
+    tasks: [],
+    podcast: {
+      episodes: [],
+      clips: []
+    },
+    sprintFocuses: DEFAULT_SPRINT_FOCUSES,
+    sprintSchedule: {},
+    weekLandingPages: {},
+    weekOfferPages: {},
+    ctaWeeks: {}
+  });
+
+  // Load initial data from Supabase
+  useEffect(() => {
+    loadAllData();
+  }, []);
+
+  const loadAllData = async () => {
+    setLoading(true);
+    try {
+      // Load all data in parallel
+      const [
+        postsResult,
+        storiesResult,
+        newslettersResult,
+        tasksResult,
+        episodesResult,
+        clipsResult,
+        sprintConfigResult,
+        sprintFocusesResult
+      ] = await Promise.all([
+        supabase.from('posts').select('*'),
+        supabase.from('stories').select('*'),
+        supabase.from('newsletters').select('*'),
+        supabase.from('tasks').select('*').order('created_at', { ascending: false }),
+        supabase.from('podcast_episodes').select('*').order('created_at', { ascending: false }),
+        supabase.from('podcast_clips').select('*').order('created_at', { ascending: false }),
+        supabase.from('sprint_config').select('*'),
+        supabase.from('sprint_focuses').select('*').eq('active', true)
+      ]);
+
+      // Transform posts data
+      const postsData = {};
+      if (postsResult.data) {
+        postsResult.data.forEach(post => {
+          const dateKey = formatDate(post.date);
+          if (!postsData[dateKey]) postsData[dateKey] = {};
+          postsData[dateKey][post.platform] = {
+            done: post.done,
+            link: post.link || '',
+            caption: post.caption || ''
+          };
+        });
+      }
+
+      // Transform stories data
+      if (storiesResult.data) {
+        storiesResult.data.forEach(story => {
+          const dateKey = formatDate(story.date);
+          if (!postsData[dateKey]) postsData[dateKey] = {};
+          postsData[dateKey].stories = {
+            done: story.done,
+            notes: story.notes || ''
+          };
+        });
+      }
+
+      // Transform newsletters data
+      const newslettersData = {
+        'crazy-experiments': [],
+        'rolands-riff': []
+      };
+      if (newslettersResult.data) {
+        newslettersResult.data.forEach(newsletter => {
+          newslettersData[newsletter.type].push({
+            date: formatDate(newsletter.date),
+            status: newsletter.status,
+            link: newsletter.link || ''
+          });
+        });
+      }
+
+      // Transform sprint config data
+      const sprintSchedule = {};
+      const weekLandingPages = {};
+      const weekOfferPages = {};
+      const ctaWeeks = {};
+      if (sprintConfigResult.data) {
+        sprintConfigResult.data.forEach(config => {
+          if (config.focus_id) sprintSchedule[config.week_id] = config.focus_id;
+          if (config.landing_page) weekLandingPages[config.week_id] = config.landing_page;
+          if (config.offer_page) weekOfferPages[config.week_id] = config.offer_page;
+          if (config.is_cta_week) ctaWeeks[config.week_id] = true;
+        });
+      }
+
+      // Use custom sprint focuses if available, otherwise use defaults
+      const sprintFocuses = sprintFocusesResult.data && sprintFocusesResult.data.length > 0
+        ? sprintFocusesResult.data
+        : DEFAULT_SPRINT_FOCUSES;
+
+      setData({
+        posts: postsData,
+        newsletters: newslettersData,
+        tasks: tasksResult.data || [],
+        podcast: {
+          episodes: episodesResult.data || [],
+          clips: clipsResult.data || []
+        },
+        sprintFocuses,
+        sprintSchedule,
+        weekLandingPages,
+        weekOfferPages,
+        ctaWeeks
+      });
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Social Posts Management
+  const updatePost = useCallback(async (date, platform, updates) => {
+    const dateStr = formatDate(date);
+
+    try {
+      // Check if post exists
+      const { data: existing } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('date', dateStr)
+        .eq('platform', platform)
+        .single();
+
+      let result;
+      if (existing) {
+        // Update existing post
+        result = await supabase
+          .from('posts')
+          .update({
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id)
+          .select()
+          .single();
+      } else {
+        // Insert new post
+        result = await supabase
+          .from('posts')
+          .insert({
+            date: dateStr,
+            platform,
+            ...updates
+          })
+          .select()
+          .single();
+      }
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        // Update local state
+        setData(prev => ({
+          ...prev,
+          posts: {
+            ...prev.posts,
+            [dateStr]: {
+              ...prev.posts[dateStr],
+              [platform]: {
+                ...prev.posts[dateStr]?.[platform],
+                ...updates
+              }
+            }
+          }
+        }));
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const getPost = useCallback((date, platform) => {
+    return data.posts[formatDate(date)]?.[platform] || {
+      done: false,
+      link: '',
+      caption: ''
+    };
+  }, [data.posts]);
+
+  const updateStories = useCallback(async (date, updates) => {
+    const dateStr = formatDate(date);
+
+    try {
+      // Check if story exists
+      const { data: existing } = await supabase
+        .from('stories')
+        .select('id')
+        .eq('date', dateStr)
+        .single();
+
+      let result;
+      if (existing) {
+        // Update existing story
+        result = await supabase
+          .from('stories')
+          .update({
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id)
+          .select()
+          .single();
+      } else {
+        // Insert new story
+        result = await supabase
+          .from('stories')
+          .insert({
+            date: dateStr,
+            ...updates
+          })
+          .select()
+          .single();
+      }
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        // Update local state
+        setData(prev => ({
+          ...prev,
+          posts: {
+            ...prev.posts,
+            [dateStr]: {
+              ...prev.posts[dateStr],
+              stories: {
+                ...prev.posts[dateStr]?.stories,
+                ...updates
+              }
+            }
+          }
+        }));
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  // Newsletter Management
+  const updateNewsletter = useCallback(async (type, date, updates) => {
+    const dateStr = formatDate(date);
+
+    try {
+      // Check if newsletter exists
+      const { data: existing } = await supabase
+        .from('newsletters')
+        .select('id')
+        .eq('date', dateStr)
+        .eq('type', type)
+        .single();
+
+      let result;
+      if (existing) {
+        // Update existing newsletter
+        result = await supabase
+          .from('newsletters')
+          .update({
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id)
+          .select()
+          .single();
+      } else {
+        // Insert new newsletter
+        result = await supabase
+          .from('newsletters')
+          .insert({
+            date: dateStr,
+            type,
+            ...updates
+          })
+          .select()
+          .single();
+      }
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        // Update local state
+        setData(prev => {
+          const newsletters = [...prev.newsletters[type]];
+          const existingIndex = newsletters.findIndex(n => n.date === dateStr);
+
+          if (existingIndex >= 0) {
+            newsletters[existingIndex] = { ...newsletters[existingIndex], ...updates };
+          } else {
+            newsletters.push({ date: dateStr, ...updates });
+          }
+
+          return {
+            ...prev,
+            newsletters: {
+              ...prev.newsletters,
+              [type]: newsletters
+            }
+          };
+        });
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const getNewsletter = useCallback((type, date) => {
+    const newsletters = data.newsletters[type] || [];
+    return newsletters.find(n => n.date === formatDate(date)) || {
+      status: 'pending',
+      link: ''
+    };
+  }, [data.newsletters]);
+
+  // Task Management
+  const addTask = useCallback(async (task) => {
+    try {
+      const result = await supabase
+        .from('tasks')
+        .insert({
+          ...task,
+          status: task.status || 'pending'
+        })
+        .select()
+        .single();
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        const newTask = result.data;
+        setData(prev => ({
+          ...prev,
+          tasks: [newTask, ...prev.tasks]
+        }));
+        return newTask;
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const updateTask = useCallback(async (taskId, updates) => {
+    try {
+      const result = await supabase
+        .from('tasks')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', taskId)
+        .select()
+        .single();
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        setData(prev => ({
+          ...prev,
+          tasks: prev.tasks.map(task =>
+            task.id === taskId ? result.data : task
+          )
+        }));
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const deleteTask = useCallback(async (taskId) => {
+    try {
+      const result = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        setData(prev => ({
+          ...prev,
+          tasks: prev.tasks.filter(task => task.id !== taskId)
+        }));
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const getTasks = useCallback((date = null, tag = null) => {
+    let tasks = data.tasks;
+
+    if (date) {
+      tasks = tasks.filter(task => task.date === formatDate(date));
+    }
+
+    if (tag) {
+      tasks = tasks.filter(task => task.tag === tag);
+    }
+
+    return tasks;
+  }, [data.tasks]);
+
+  // Podcast Management
+  const addPodcastEpisode = useCallback(async (episode) => {
+    try {
+      const result = await supabase
+        .from('podcast_episodes')
+        .insert({
+          ...episode,
+          status: episode.status || 'pending'
+        })
+        .select()
+        .single();
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        const newEpisode = result.data;
+        setData(prev => ({
+          ...prev,
+          podcast: {
+            ...prev.podcast,
+            episodes: [newEpisode, ...prev.podcast.episodes]
+          }
+        }));
+        return newEpisode;
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const updatePodcastEpisode = useCallback(async (episodeId, updates) => {
+    try {
+      const result = await supabase
+        .from('podcast_episodes')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', episodeId)
+        .select()
+        .single();
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        setData(prev => ({
+          ...prev,
+          podcast: {
+            ...prev.podcast,
+            episodes: prev.podcast.episodes.map(episode =>
+              episode.id === episodeId ? result.data : episode
+            )
+          }
+        }));
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const addPodcastClip = useCallback(async (clip) => {
+    try {
+      const result = await supabase
+        .from('podcast_clips')
+        .insert(clip)
+        .select()
+        .single();
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        const newClip = result.data;
+        setData(prev => ({
+          ...prev,
+          podcast: {
+            ...prev.podcast,
+            clips: [newClip, ...prev.podcast.clips]
+          }
+        }));
+        return newClip;
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  // Get daily completion status
+  const getDayCompletion = useCallback((date) => {
+    const dateStr = formatDate(date);
+    const dayData = data.posts[dateStr] || {};
+
+    // Base platforms that are required every day
+    const platforms = ['instagram', 'linkedin', 'youtube'];
+
+    // Add Business Lunch Instagram on Tuesdays and Thursdays
+    if (isTuesday(date) || isThursday(date)) {
+      platforms.push('instagram-business-lunch');
+    }
+
+    const platformsComplete = platforms.every(p => dayData[p]?.done);
+    const storiesComplete = dayData.stories?.done || false;
+
+    return {
+      platforms: platforms.map(p => ({
+        name: p,
+        done: dayData[p]?.done || false
+      })),
+      stories: storiesComplete,
+      allComplete: platformsComplete && storiesComplete
+    };
+  }, [data.posts]);
+
+  // Sprint Focus Management
+  const addSprintFocus = useCallback(async (focus) => {
+    try {
+      const newFocus = {
+        id: focus.id || `custom-${Date.now()}`,
+        name: focus.name,
+        description: focus.description,
+        color: focus.color,
+        active: true,
+        is_custom: true
+      };
+
+      const result = await supabase
+        .from('sprint_focuses')
+        .insert(newFocus)
+        .select()
+        .single();
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        setData(prev => ({
+          ...prev,
+          sprintFocuses: [...prev.sprintFocuses, result.data]
+        }));
+        return result.data;
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const updateSprintFocus = useCallback(async (focusId, updates) => {
+    try {
+      const result = await supabase
+        .from('sprint_focuses')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', focusId)
+        .select()
+        .single();
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        setData(prev => ({
+          ...prev,
+          sprintFocuses: prev.sprintFocuses.map(focus =>
+            focus.id === focusId ? result.data : focus
+          )
+        }));
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const deleteSprintFocus = useCallback(async (focusId) => {
+    try {
+      const result = await supabase
+        .from('sprint_focuses')
+        .update({
+          active: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', focusId);
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        setData(prev => ({
+          ...prev,
+          sprintFocuses: prev.sprintFocuses.filter(focus => focus.id !== focusId)
+        }));
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const getSprintFocuses = useCallback(() => {
+    return data.sprintFocuses;
+  }, [data.sprintFocuses]);
+
+  const setWeekFocus = useCallback(async (weekId, focusId) => {
+    try {
+      // Check if config exists
+      const { data: existing } = await supabase
+        .from('sprint_config')
+        .select('id')
+        .eq('week_id', weekId)
+        .single();
+
+      let result;
+      if (existing) {
+        // Update existing config
+        result = await supabase
+          .from('sprint_config')
+          .update({
+            focus_id: focusId,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id);
+      } else {
+        // Insert new config
+        result = await supabase
+          .from('sprint_config')
+          .insert({
+            week_id: weekId,
+            focus_id: focusId
+          });
+      }
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        setData(prev => ({
+          ...prev,
+          sprintSchedule: {
+            ...prev.sprintSchedule,
+            [weekId]: focusId
+          }
+        }));
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const getWeekFocus = useCallback((weekId) => {
+    return data.sprintSchedule?.[weekId] || null;
+  }, [data.sprintSchedule]);
+
+  const setWeekLandingPage = useCallback(async (weekId, url) => {
+    try {
+      // Check if config exists
+      const { data: existing } = await supabase
+        .from('sprint_config')
+        .select('id')
+        .eq('week_id', weekId)
+        .single();
+
+      let result;
+      if (existing) {
+        // Update existing config
+        result = await supabase
+          .from('sprint_config')
+          .update({
+            landing_page: url,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id);
+      } else {
+        // Insert new config
+        result = await supabase
+          .from('sprint_config')
+          .insert({
+            week_id: weekId,
+            landing_page: url
+          });
+      }
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        setData(prev => ({
+          ...prev,
+          weekLandingPages: {
+            ...prev.weekLandingPages,
+            [weekId]: url
+          }
+        }));
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const getWeekLandingPage = useCallback((weekId) => {
+    return data.weekLandingPages?.[weekId] || '';
+  }, [data.weekLandingPages]);
+
+  const setWeekOfferPage = useCallback(async (weekId, url) => {
+    try {
+      // Check if config exists
+      const { data: existing } = await supabase
+        .from('sprint_config')
+        .select('id')
+        .eq('week_id', weekId)
+        .single();
+
+      let result;
+      if (existing) {
+        // Update existing config
+        result = await supabase
+          .from('sprint_config')
+          .update({
+            offer_page: url,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id);
+      } else {
+        // Insert new config
+        result = await supabase
+          .from('sprint_config')
+          .insert({
+            week_id: weekId,
+            offer_page: url
+          });
+      }
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        setData(prev => ({
+          ...prev,
+          weekOfferPages: {
+            ...prev.weekOfferPages,
+            [weekId]: url
+          }
+        }));
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const getWeekOfferPage = useCallback((weekId) => {
+    return data.weekOfferPages?.[weekId] || '';
+  }, [data.weekOfferPages]);
+
+  const setWeekAsCTA = useCallback(async (weekId, isCTA) => {
+    try {
+      // Check if config exists
+      const { data: existing } = await supabase
+        .from('sprint_config')
+        .select('id')
+        .eq('week_id', weekId)
+        .single();
+
+      let result;
+      if (existing) {
+        // Update existing config
+        result = await supabase
+          .from('sprint_config')
+          .update({
+            is_cta_week: isCTA,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id);
+      } else {
+        // Insert new config
+        result = await supabase
+          .from('sprint_config')
+          .insert({
+            week_id: weekId,
+            is_cta_week: isCTA
+          });
+      }
+
+      if (result.error) {
+        handleSupabaseError(result.error);
+      } else {
+        setData(prev => ({
+          ...prev,
+          ctaWeeks: {
+            ...prev.ctaWeeks,
+            [weekId]: isCTA
+          }
+        }));
+      }
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  }, []);
+
+  const isWeekCTA = useCallback((weekId) => {
+    return data.ctaWeeks?.[weekId] || false;
+  }, [data.ctaWeeks]);
+
+  const value = {
+    data,
+    loading,
+    // Social Posts
+    updatePost,
+    getPost,
+    updateStories,
+    getDayCompletion,
+    // Newsletters
+    updateNewsletter,
+    getNewsletter,
+    // Tasks
+    addTask,
+    updateTask,
+    deleteTask,
+    getTasks,
+    // Podcast
+    addPodcastEpisode,
+    updatePodcastEpisode,
+    addPodcastClip,
+    // Sprint Focuses
+    addSprintFocus,
+    updateSprintFocus,
+    deleteSprintFocus,
+    getSprintFocuses,
+    setWeekFocus,
+    getWeekFocus,
+    setWeekLandingPage,
+    getWeekLandingPage,
+    setWeekOfferPage,
+    getWeekOfferPage,
+    setWeekAsCTA,
+    isWeekCTA
+  };
+
+  return (
+    <DataContext.Provider value={value}>
+      {loading ? (
+        <LoadingSpinner message="Loading your content data..." />
+      ) : (
+        children
+      )}
+    </DataContext.Provider>
+  );
+};

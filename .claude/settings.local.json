@@ -11,7 +11,9 @@
       "Bash(npx:*)",
       "Bash(cd:*)",
       "Bash(node:*)",
-      "Bash(curl -X POST 'https://nqbetmhexfyvmrhorpgt.supabase.co/rest/v1/rpc/exec_sql' )"
+      "Bash(curl -X POST 'https://nqbetmhexfyvmrhorpgt.supabase.co/rest/v1/rpc/exec_sql' )",
+      "Bash(git commit:*)",
+      "Bash(bash:*)"
     ],
     "deny": [],
     "ask": []
