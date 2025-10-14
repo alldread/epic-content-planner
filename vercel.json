@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd content-dashboard && npm run build",
-  "outputDirectory": "content-dashboard/dist",
-  "installCommand": "cd content-dashboard && npm install",
-  "framework": null
-}

@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Hardcoding because environment variables aren't loading
-const supabaseUrl = 'https://nqbetmhexfyvmrhorpgt.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xYmV0bWhleGZ5dm1yaG9ycGd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzNzc1MTEsImV4cCI6MjA3NTk1MzUxMX0.hhaJbbBQPqM30kUcin4qQ546CRFw9_9y7_IdQ5rbcog';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 console.log('Supabase URL:', supabaseUrl ? 'Loaded' : 'Missing');
 console.log('Supabase Anon Key:', supabaseAnonKey ? 'Loaded' : 'Missing');
