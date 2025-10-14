@@ -51,12 +51,6 @@ export const DataProvider = ({ children }) => {
     setLoading(true);
     console.log('Starting to load data from Supabase...');
 
-    if (!supabase) {
-      console.error('Cannot load data - Supabase client not initialized');
-      setLoading(false);
-      return;
-    }
-
     try {
       // Load all data in parallel
       const [
