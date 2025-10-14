@@ -37,7 +37,12 @@ export const DataProvider = ({ children }) => {
   // Load initial data from Supabase
   useEffect(() => {
     const fetchData = async () => {
-      await loadAllData();
+      try {
+        await loadAllData();
+      } catch (error) {
+        console.error('Failed to load initial data:', error);
+        setLoading(false); // Ensure loading stops even on error
+      }
     };
     fetchData();
   }, []);

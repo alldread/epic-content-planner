@@ -7,11 +7,9 @@ console.log('Supabase URL:', supabaseUrl ? 'Loaded' : 'Missing');
 console.log('Supabase Anon Key:', supabaseAnonKey ? 'Loaded' : 'Missing');
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables:', {
-    url: supabaseUrl,
-    key: supabaseAnonKey ? 'present' : 'missing'
-  });
-  throw new Error('Supabase configuration missing');
+  console.error('Missing Supabase environment variables. Check .env.local file.');
+  console.error('URL:', supabaseUrl || 'MISSING');
+  console.error('Key:', supabaseAnonKey ? 'Present' : 'MISSING');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
