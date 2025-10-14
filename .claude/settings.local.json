@@ -16,7 +16,8 @@
       "Bash(bash:*)",
       "Bash(cat:*)",
       "Bash(open:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push origin master)"
     ],
     "deny": [],
     "ask": []
