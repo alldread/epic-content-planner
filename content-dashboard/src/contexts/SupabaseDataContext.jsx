@@ -51,6 +51,14 @@ export const DataProvider = ({ children }) => {
     setLoading(true);
     console.log('Starting to load data from Supabase...');
 
+    // Check if Supabase client is available
+    if (!supabase) {
+      console.error('Supabase client not initialized - check environment variables');
+      console.log('Using empty data state - no database connection');
+      setLoading(false);
+      return;
+    }
+
     try {
       // Load all data in parallel
       const [
@@ -184,6 +192,11 @@ export const DataProvider = ({ children }) => {
 
   // Social Posts Management
   const updatePost = useCallback(async (date, platform, updates) => {
+    if (!supabase) {
+      console.error('Cannot update post: Supabase client not initialized');
+      return;
+    }
+
     const dateStr = formatDate(date);
 
     try {
@@ -252,6 +265,11 @@ export const DataProvider = ({ children }) => {
   }, [data.posts]);
 
   const updateStories = useCallback(async (date, updates) => {
+    if (!supabase) {
+      console.error('Cannot update stories: Supabase client not initialized');
+      return;
+    }
+
     const dateStr = formatDate(date);
 
     try {
@@ -311,6 +329,11 @@ export const DataProvider = ({ children }) => {
 
   // Newsletter Management
   const updateNewsletter = useCallback(async (type, date, updates) => {
+    if (!supabase) {
+      console.error('Cannot update newsletter: Supabase client not initialized');
+      return;
+    }
+
     const dateStr = formatDate(date);
 
     try {
@@ -385,6 +408,11 @@ export const DataProvider = ({ children }) => {
 
   // Task Management
   const addTask = useCallback(async (task) => {
+    if (!supabase) {
+      console.error('Cannot add task: Supabase client not initialized');
+      return;
+    }
+
     try {
       const result = await supabase
         .from('tasks')
@@ -720,6 +748,12 @@ export const DataProvider = ({ children }) => {
 
   const setWeekLandingPage = useCallback(async (weekId, url) => {
     console.log('Saving landing page:', { weekId, url });
+
+    if (!supabase) {
+      console.error('Cannot save landing page: Supabase client not initialized');
+      return;
+    }
+
     try {
       // Check if config exists
       const { data: existing } = await supabase

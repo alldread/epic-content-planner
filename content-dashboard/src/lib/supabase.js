@@ -6,26 +6,32 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 console.log('Supabase URL:', supabaseUrl ? 'Loaded' : 'Missing');
 console.log('Supabase Anon Key:', supabaseAnonKey ? 'Loaded' : 'Missing');
 
-// Create Supabase client - it will work when env vars are present (like on Vercel)
-export const supabase = createClient(
-  supabaseUrl || '',
-  supabaseAnonKey || '',
-  {
-    auth: {
-      persistSession: false, // We're using our own auth system
-      autoRefreshToken: false,
-    },
-    db: {
-      schema: 'public'
-    }
-  }
-);
+// Only create Supabase client if we have valid environment variables
+let supabase = null;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase environment variables not found - database operations will fail');
-  console.log('URL:', supabaseUrl ? 'Present' : 'MISSING');
-  console.log('Key:', supabaseAnonKey ? 'Present' : 'MISSING');
+if (supabaseUrl && supabaseAnonKey) {
+  supabase = createClient(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      auth: {
+        persistSession: false, // We're using our own auth system
+        autoRefreshToken: false,
+      },
+      db: {
+        schema: 'public'
+      }
+    }
+  );
+  console.log('Supabase client created successfully');
+} else {
+  console.error('CRITICAL: Supabase environment variables not found');
+  console.error('URL:', supabaseUrl || 'MISSING - Check VITE_SUPABASE_URL');
+  console.error('Key:', supabaseAnonKey ? 'Present' : 'MISSING - Check VITE_SUPABASE_ANON_KEY');
+  console.error('The app will not be able to save or load data');
 }
+
+export { supabase };
 
 // Helper function to handle Supabase errors
 export const handleSupabaseError = (error) => {
