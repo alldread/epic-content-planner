@@ -21,7 +21,7 @@
 }
 
 .loading-spinner p {
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 500;
 }

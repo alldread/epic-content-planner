@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DataProvider } from './contexts/SupabaseDataContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import PasswordProtect from './components/Auth/PasswordProtect';
 import Layout from './components/Layout/Layout';
 import CalendarView from './components/Calendar/CalendarView';
@@ -168,15 +169,17 @@ function App() {
   };
 
   return (
-    <PasswordProtect>
-      <ThemeProvider>
-        <DataProvider>
-          <Layout activeView={activeView} onViewChange={setActiveView}>
-            {renderView()}
-          </Layout>
-        </DataProvider>
-      </ThemeProvider>
-    </PasswordProtect>
+    <ErrorBoundary>
+      <PasswordProtect>
+        <ThemeProvider>
+          <DataProvider>
+            <Layout activeView={activeView} onViewChange={setActiveView}>
+              {renderView()}
+            </Layout>
+          </DataProvider>
+        </ThemeProvider>
+      </PasswordProtect>
+    </ErrorBoundary>
   );
 }
 
