@@ -49,17 +49,10 @@ export const DataProvider = ({ children }) => {
       }
 
       try {
-        // Load all data in parallel
-        const [
-          postsResult,
-          storiesResult,
-          newslettersResult,
-          tasksResult,
-          episodesResult,
-          clipsResult,
-          sprintConfigResult,
-          sprintFocusesResult
-        ] = await Promise.all([
+        console.log('Loading data from Supabase - queries starting...');
+
+        // Load all data in parallel using allSettled to handle failures gracefully
+        const results = await Promise.allSettled([
           supabase.from('posts').select('*'),
           supabase.from('stories').select('*'),
           supabase.from('newsletters').select('*'),
@@ -70,19 +63,33 @@ export const DataProvider = ({ children }) => {
           supabase.from('sprint_focuses').select('*').eq('active', true)
         ]);
 
+        // Extract results, handling both fulfilled and rejected promises
+        const postsResult = results[0].status === 'fulfilled' ? results[0].value : { data: null, error: results[0].reason };
+        const storiesResult = results[1].status === 'fulfilled' ? results[1].value : { data: null, error: results[1].reason };
+        const newslettersResult = results[2].status === 'fulfilled' ? results[2].value : { data: null, error: results[2].reason };
+        const tasksResult = results[3].status === 'fulfilled' ? results[3].value : { data: null, error: results[3].reason };
+        const episodesResult = results[4].status === 'fulfilled' ? results[4].value : { data: null, error: results[4].reason };
+        const clipsResult = results[5].status === 'fulfilled' ? results[5].value : { data: null, error: results[5].reason };
+        const sprintConfigResult = results[6].status === 'fulfilled' ? results[6].value : { data: null, error: results[6].reason };
+        const sprintFocusesResult = results[7].status === 'fulfilled' ? results[7].value : { data: null, error: results[7].reason };
+
         // Check for errors in any query
         const errors = [];
-        if (postsResult.error) errors.push('posts: ' + postsResult.error.message);
-        if (storiesResult.error) errors.push('stories: ' + storiesResult.error.message);
-        if (newslettersResult.error) errors.push('newsletters: ' + newslettersResult.error.message);
-        if (tasksResult.error) errors.push('tasks: ' + tasksResult.error.message);
-        if (episodesResult.error) errors.push('episodes: ' + episodesResult.error.message);
-        if (clipsResult.error) errors.push('clips: ' + clipsResult.error.message);
-        if (sprintConfigResult.error) errors.push('sprint_config: ' + sprintConfigResult.error.message);
-        if (sprintFocusesResult.error) errors.push('sprint_focuses: ' + sprintFocusesResult.error.message);
+        const queryNames = ['posts', 'stories', 'newsletters', 'tasks', 'podcast_episodes', 'podcast_clips', 'sprint_config', 'sprint_focuses'];
+
+        results.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            errors.push(`${queryNames[index]}: Promise rejected - ${result.reason}`);
+          } else if (result.value?.error) {
+            const errorMsg = result.value.error.message || result.value.error;
+            errors.push(`${queryNames[index]}: ${errorMsg}`);
+          }
+        });
 
         if (errors.length > 0) {
           console.error('Errors loading from Supabase:', errors);
+        } else {
+          console.log('All Supabase queries completed successfully');
         }
 
         // Transform posts data
