@@ -87,7 +87,7 @@ export const DataProvider = ({ children }) => {
 
         // Transform posts data
         const postsData = {};
-        if (postsResult.data) {
+        if (postsResult && postsResult.data) {
           postsResult.data.forEach(post => {
             const dateKey = formatDate(post.date);
             if (!postsData[dateKey]) postsData[dateKey] = {};
@@ -100,7 +100,7 @@ export const DataProvider = ({ children }) => {
         }
 
         // Transform stories data
-        if (storiesResult.data) {
+        if (storiesResult && storiesResult.data) {
           storiesResult.data.forEach(story => {
             const dateKey = formatDate(story.date);
             if (!postsData[dateKey]) postsData[dateKey] = {};
@@ -116,13 +116,15 @@ export const DataProvider = ({ children }) => {
           'crazy-experiments': [],
           'rolands-riff': []
         };
-        if (newslettersResult.data) {
+        if (newslettersResult && newslettersResult.data) {
           newslettersResult.data.forEach(newsletter => {
-            newslettersData[newsletter.type].push({
-              date: formatDate(newsletter.date),
-              status: newsletter.status,
-              link: newsletter.link || ''
-            });
+            if (newslettersData[newsletter.type]) {
+              newslettersData[newsletter.type].push({
+                date: formatDate(newsletter.date),
+                status: newsletter.status,
+                link: newsletter.link || ''
+              });
+            }
           });
         }
 
@@ -131,7 +133,7 @@ export const DataProvider = ({ children }) => {
         const weekLandingPages = {};
         const weekOfferPages = {};
         const ctaWeeks = {};
-        if (sprintConfigResult.data) {
+        if (sprintConfigResult && sprintConfigResult.data) {
           sprintConfigResult.data.forEach(config => {
             if (config.focus_id) sprintSchedule[config.week_id] = config.focus_id;
             if (config.landing_page) weekLandingPages[config.week_id] = config.landing_page;
@@ -141,16 +143,16 @@ export const DataProvider = ({ children }) => {
         }
 
         // Use custom sprint focuses if available, otherwise use defaults
-        const sprintFocuses = sprintFocusesResult.data && sprintFocusesResult.data.length > 0
+        const sprintFocuses = (sprintFocusesResult && sprintFocusesResult.data && sprintFocusesResult.data.length > 0)
           ? sprintFocusesResult.data
           : DEFAULT_SPRINT_FOCUSES;
 
         console.log('Data loaded successfully:', {
           posts: Object.keys(postsData).length,
-          newsletters: newslettersResult.data?.length || 0,
-          tasks: tasksResult.data?.length || 0,
-          episodes: episodesResult.data?.length || 0,
-          clips: clipsResult.data?.length || 0,
+          newsletters: newslettersResult?.data?.length || 0,
+          tasks: tasksResult?.data?.length || 0,
+          episodes: episodesResult?.data?.length || 0,
+          clips: clipsResult?.data?.length || 0,
           sprintConfigs: Object.keys(sprintSchedule).length,
           sprintFocuses: sprintFocuses.length
         });
@@ -158,10 +160,10 @@ export const DataProvider = ({ children }) => {
         setData({
           posts: postsData,
           newsletters: newslettersData,
-          tasks: tasksResult.data || [],
+          tasks: tasksResult?.data || [],
           podcast: {
-            episodes: episodesResult.data || [],
-            clips: clipsResult.data || []
+            episodes: episodesResult?.data || [],
+            clips: clipsResult?.data || []
           },
           sprintFocuses,
           sprintSchedule,
@@ -173,6 +175,25 @@ export const DataProvider = ({ children }) => {
       } catch (error) {
         console.error('Error loading data from Supabase:', error);
         console.error('Error details:', error.message, error.stack);
+
+        // Set default data structure even if there's an error
+        setData({
+          posts: {},
+          newsletters: {
+            'crazy-experiments': [],
+            'rolands-riff': []
+          },
+          tasks: [],
+          podcast: {
+            episodes: [],
+            clips: []
+          },
+          sprintFocuses: DEFAULT_SPRINT_FOCUSES,
+          sprintSchedule: {},
+          weekLandingPages: {},
+          weekOfferPages: {},
+          ctaWeeks: {}
+        });
       } finally {
         setLoading(false);
         console.log('Loading state set to false');

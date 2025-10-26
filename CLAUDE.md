@@ -30,10 +30,57 @@ When fixing bugs: Fix only the reported issue. Leave everything else exactly as 
 
 ## Development Commands
 
-```bash
-# Start development server (port 5173)
-npm run dev
+### IMPORTANT: Starting the Local Development Server
 
+**The application code is in the `content-dashboard/` subdirectory**, not the root directory. Always navigate there first:
+
+```bash
+# Navigate to the correct directory FIRST
+cd content-dashboard
+
+# Then start the development server
+npm run dev
+```
+
+The server will start on port 5173 and display:
+```
+➜  Local:   http://localhost:5173/
+```
+
+#### Troubleshooting Server Issues
+
+If `npm run dev` appears to hang or doesn't work:
+
+1. **Check if a server is already running:**
+   ```bash
+   # Check if port 5173 is in use
+   lsof -i :5173
+
+   # If you see a process, the server is already running!
+   # Just open http://localhost:5173 in your browser
+   ```
+
+2. **Kill existing server and restart:**
+   ```bash
+   # Find the process ID (PID)
+   ps aux | grep vite
+
+   # Kill it (replace PID with actual number)
+   kill PID
+
+   # Navigate to correct directory and restart
+   cd content-dashboard
+   npm run dev
+   ```
+
+3. **Always run from `content-dashboard/` directory:**
+   - The app is NOT in the root `/epic-content-planner/` directory
+   - It's in `/epic-content-planner/content-dashboard/`
+   - All npm commands must be run from this subdirectory
+
+### Other Development Commands
+
+```bash
 # Build for production (outputs to dist/)
 npm run build
 
