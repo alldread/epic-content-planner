@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
+import React, { createContext, useContext, useCallback, useState, useEffect, useRef } from 'react';
 import { supabase, handleSupabaseError } from '../lib/supabase';
 import { formatDate, isTuesday, isThursday } from '../utils/dateHelpers';
 import { DEFAULT_SPRINT_FOCUSES } from '../utils/sprintFocuses';
@@ -16,6 +16,7 @@ export const useData = () => {
 
 export const DataProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
+  const loadingStarted = useRef(false);
   const [data, setData] = useState({
     posts: {},
     newsletters: {
@@ -36,9 +37,16 @@ export const DataProvider = ({ children }) => {
 
   // Load initial data from Supabase
   useEffect(() => {
+    // Prevent double execution
+    if (loadingStarted.current) {
+      console.log('Load already started, skipping duplicate execution');
+      return;
+    }
+    loadingStarted.current = true;
+
     const loadAllData = async () => {
+      console.log('DataProvider: Starting to load data from Supabase...');
       setLoading(true);
-      console.log('Starting to load data from Supabase...');
 
       // Check if Supabase client is available
       if (!supabase) {
@@ -208,10 +216,7 @@ export const DataProvider = ({ children }) => {
     };
 
     // Call the function
-    loadAllData().catch(error => {
-      console.error('Fatal error loading data:', error);
-      setLoading(false);
-    });
+    loadAllData();
   }, []);
 
   // Social Posts Management

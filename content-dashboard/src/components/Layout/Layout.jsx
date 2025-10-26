@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import './Layout.css';
 
 const Layout = ({ children, activeView, onViewChange }) => {
+  console.log('Layout rendering with activeView:', activeView);
   return (
     <div className="app-layout">
       <Header />

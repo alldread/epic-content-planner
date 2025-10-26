@@ -11,6 +11,7 @@ import { migrateLocalStorageToSupabase, backupLocalStorageData } from './utils/m
 import './styles/globals.css';
 
 function App() {
+  console.log('App component rendering');
   const [activeView, setActiveView] = useState('calendar');
   const [migrationStatus, setMigrationStatus] = useState(null);
 
@@ -54,6 +55,7 @@ function App() {
   };
 
   const renderView = () => {
+    console.log('Rendering view:', activeView);
     switch (activeView) {
       case 'calendar':
         return <CalendarView />;
@@ -140,7 +142,7 @@ function App() {
               <div className="settings-section">
                 <h3>Data Storage</h3>
                 <p className="text-muted">
-                  <strong style={{ color: 'var(--text-primary)' }}>✓ Cloud Storage Active</strong><br />
+                  <strong style={{ color: 'var(--text)' }}>✓ Cloud Storage Active</strong><br />
                   Your data is now stored in the cloud and syncs automatically.
                 </p>
               </div>
@@ -148,7 +150,7 @@ function App() {
               <div className="settings-section">
                 <h3>Security</h3>
                 <p className="text-muted">
-                  <strong style={{ color: 'var(--text-primary)' }}>✓ Password Protected</strong><br />
+                  <strong style={{ color: 'var(--text)' }}>✓ Password Protected</strong><br />
                   Access is restricted with a secure password.
                 </p>
               </div>
