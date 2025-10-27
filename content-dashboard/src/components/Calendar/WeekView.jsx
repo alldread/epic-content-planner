@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import { format } from 'date-fns';
 import DayCard from './DayCard';
 import SprintFocusSelector from '../SprintFocus/SprintFocusSelector';
-import { useData } from '../../contexts/DataContext';
+import { useData } from '../../contexts/SupabaseDataContext';
 import './WeekView.css';
 
 const WeekView = forwardRef(({ week, weekNumber, currentDate }, ref) => {

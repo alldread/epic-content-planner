@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useData } from '../../contexts/DataContext';
+import { useData } from '../../contexts/SupabaseDataContext';
 import Modal from '../UI/Modal';
 import './SprintFocusManager.css';
 

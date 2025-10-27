@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { isToday, isFriday, format } from 'date-fns';
-import { useData } from '../../contexts/DataContext';
+import { useData } from '../../contexts/SupabaseDataContext';
 import { isNewsletterDay, formatDay, formatShortWeekday } from '../../utils/dateHelpers';
 import { InstagramIcon, LinkedInIcon, YouTubeIcon } from '../UI/SocialIcons';
 import ContentModal from '../Content/ContentModal';

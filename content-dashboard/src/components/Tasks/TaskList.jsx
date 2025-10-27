@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useData } from '../../contexts/DataContext';
+import { useData } from '../../contexts/SupabaseDataContext';
 import { formatDate } from '../../utils/dateHelpers';
 import { TASK_TAGS, TASK_STATUS } from '../../utils/constants';
 import TaskItem from './TaskItem';

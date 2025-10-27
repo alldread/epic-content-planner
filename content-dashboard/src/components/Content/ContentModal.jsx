@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Modal from '../UI/Modal';
 import SocialPostForm from './SocialPostForm';
 import TaskList from '../Tasks/TaskList';
-import { useData } from '../../contexts/DataContext';
+import { useData } from '../../contexts/SupabaseDataContext';
 import { formatDateDisplay, isNewsletterDay, isFriday, isTuesday, isThursday } from '../../utils/dateHelpers';
 import { InstagramIcon } from '../UI/SocialIcons';
 import './ContentModal.css';

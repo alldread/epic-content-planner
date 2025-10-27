@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useData } from '../../contexts/DataContext';
+import { useData } from '../../contexts/SupabaseDataContext';
 import { PLATFORM_LABELS } from '../../utils/constants';
 import { InstagramIcon, LinkedInIcon, YouTubeIcon } from '../UI/SocialIcons';
 import { isTuesday, isThursday } from '../../utils/dateHelpers';

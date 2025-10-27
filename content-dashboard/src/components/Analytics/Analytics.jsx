@@ -1,5 +1,5 @@
 import React from 'react';
-import { useData } from '../../contexts/DataContext';
+import { useData } from '../../contexts/SupabaseDataContext';
 import { startOfMonth, endOfMonth, eachDayOfInterval, format } from 'date-fns';
 import './Analytics.css';
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useData } from '../../contexts/DataContext';
+import { useData } from '../../contexts/SupabaseDataContext';
 import './SprintFocusSelector.css';
 
 const SprintFocusSelector = ({ weekId, weekNumber }) => {
